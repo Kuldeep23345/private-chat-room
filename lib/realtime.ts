@@ -14,6 +14,11 @@ const message = z.object({
 const schema = {
   chat: {
     message,
+    presence: z.object({
+      roomId: z.string(),
+      participants: z.number(),
+      maxParticipants: z.number(),
+    }),
     destroy: z.object({
       isDestroyed: z.literal(true),
     }),
