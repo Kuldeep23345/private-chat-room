@@ -12,9 +12,11 @@ const Page = () => {
   const [roomInput, setRoomInput] = useState("");
   const [joinError, setJoinError] = useState("");
 
+  const [ttl, setTtl] = useState(60 * 10); // Default 10 mins
+
   const { mutate: createRoom } = useMutation({
     mutationFn: async () => {
-      const res = await client.room.create.post();
+      const res = await client.room.create.post({ ttl });
       if (res.status === 200) {
         router.push(`/room/${res.data?.roomId}`);
       }
@@ -105,6 +107,33 @@ const Page = () => {
               </div>
               {joinError && <p className="text-xs text-red-400">{joinError}</p>}
             </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center text-zinc-500 text-xs uppercase tracking-widest">
+                Room Duration
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: "5m", value: 60 * 5 },
+                  { label: "10m", value: 60 * 10 },
+                  { label: "30m", value: 60 * 30 },
+                  { label: "1h", value: 60 * 60 },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setTtl(option.value)}
+                    className={`py-1.5 text-[10px] font-bold border transition-colors ${
+                      ttl === option.value
+                        ? "bg-green-500/20 border-green-500 text-green-500"
+                        : "bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-zinc-700"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="flex items-center text-zinc-500 text-xs uppercase tracking-widest">
                 Your Identity

@@ -8,14 +8,19 @@ import { Message, realtime } from "@/lib/realtime";
 const MAX_ROOM_USERS = 2;
 
 const rooms = new Elysia({ prefix: "/room" })
-  .post("/create", async () => {
+  .post("/create", async ({ body }) => {
     const roomId = nanoid();
+    const ttl = body?.ttl || 60 * 10;
     await redis.hset(`meta:${roomId}`, {
       connected: [],
       createdAt: Date.now(),
     });
-    await redis.expire(`meta:${roomId}`, 60 * 10);
+    await redis.expire(`meta:${roomId}`, ttl);
     return { roomId };
+  }, {
+    body: z.object({
+      ttl: z.number().optional()
+    }).optional()
   })
   .get(
     "/join",
@@ -27,8 +32,7 @@ const rooms = new Elysia({ prefix: "/room" })
         return { error: "Room not found" };
       }
 
-      let userToken =
-        typeof token.value === "string" ? token.value : undefined;
+      let userToken = typeof token.value === "string" ? token.value : undefined;
       if (!userToken) {
         userToken = nanoid();
         token.value = userToken;
@@ -40,7 +44,11 @@ const rooms = new Elysia({ prefix: "/room" })
       const connectedRaw =
         (await redis.hget<string[]>(`meta:${roomId}`, "connected")) || [];
       const connected = Array.from(
-        new Set(connectedRaw.filter((token): token is string => typeof token === "string")),
+        new Set(
+          connectedRaw.filter(
+            (token): token is string => typeof token === "string",
+          ),
+        ),
       );
 
       if (!connected.includes(userToken)) {
@@ -59,7 +67,12 @@ const rooms = new Elysia({ prefix: "/room" })
       });
 
       const ttl = await redis.ttl(`meta:${roomId}`);
-      return { token: userToken, ttl, participants: connected.length, maxParticipants: MAX_ROOM_USERS };
+      return {
+        token: userToken,
+        ttl,
+        participants: connected.length,
+        maxParticipants: MAX_ROOM_USERS,
+      };
     },
     {
       query: z.object({ roomId: z.string() }),
@@ -71,7 +84,9 @@ const rooms = new Elysia({ prefix: "/room" })
       const { roomId } = query;
       await redis.del(`meta:${roomId}`);
       await redis.del(`messages:${roomId}`);
-      await realtime.channel(roomId).emit("chat.destroy", { isDestroyed: true });
+      await realtime
+        .channel(roomId)
+        .emit("chat.destroy", { isDestroyed: true });
       return { success: true };
     },
     {

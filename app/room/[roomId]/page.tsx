@@ -51,7 +51,9 @@ const Page = () => {
       const res = await client.message.history.get({ query: { roomId } });
       const data = res.data ?? [];
       return data.map((item) =>
-        typeof item === "string" ? (JSON.parse(item) as Message) : (item as Message),
+        typeof item === "string"
+          ? (JSON.parse(item) as Message)
+          : (item as Message),
       );
     },
     enabled: !!joinData,
@@ -64,10 +66,13 @@ const Page = () => {
     onData: ({ event, data }) => {
       if (event === "chat.message") {
         const message = data as Message;
-        queryClient.setQueryData(["messages", roomId], (old: Message[] = []) => {
-          if (old.some((item) => item.id === message.id)) return old;
-          return [...old, message];
-        });
+        queryClient.setQueryData(
+          ["messages", roomId],
+          (old: Message[] = []) => {
+            if (old.some((item) => item.id === message.id)) return old;
+            return [...old, message];
+          },
+        );
       } else if (event === "chat.presence") {
         const presence = data as PresenceData;
         if (presence.roomId === roomId) {
@@ -150,7 +155,9 @@ const Page = () => {
 
   if (joinError) {
     const errorMessage =
-      joinError instanceof Error ? joinError.message : "Failed to join this room.";
+      joinError instanceof Error
+        ? joinError.message
+        : "Failed to join this room.";
     const isRoomFull = errorMessage.toLowerCase().includes("full");
 
     return (
@@ -200,9 +207,13 @@ const Page = () => {
       <header className="border-b border-zinc-800 p-3 sm:p-4 flex items-center justify-between bg-zinc-900/30 sticky top-0 z-10">
         <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
           <div className="flex flex-col min-w-0">
-            <span className="text-[10px] sm:text-xs text-zinc-500 uppercase hidden sm:block">Room ID</span>
+            <span className="text-[10px] sm:text-xs text-zinc-500 uppercase hidden sm:block">
+              Room ID
+            </span>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-green-500 truncate text-sm sm:text-base">{roomId}</span>
+              <span className="font-bold text-green-500 truncate text-sm sm:text-base">
+                {roomId}
+              </span>
               <button
                 onClick={copyLink}
                 className="text-[9px] sm:text-[10px] bg-zinc-800 hover:bg-zinc-700 px-1.5 sm:px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
@@ -213,7 +224,9 @@ const Page = () => {
           </div>
           <div className="h-6 sm:h-8 w-px bg-zinc-800 shrink-0" />
           <div className="flex flex-col shrink-0">
-            <span className="text-[10px] sm:text-xs text-zinc-500 uppercase hidden sm:block">Users</span>
+            <span className="text-[10px] sm:text-xs text-zinc-500 uppercase hidden sm:block">
+              Users
+            </span>
             <span className="text-xs sm:text-sm font-bold text-zinc-200">
               {presence?.participants ?? joinData?.participants ?? "--"}/
               {presence?.maxParticipants ?? joinData?.maxParticipants ?? 2}
@@ -252,8 +265,12 @@ const Page = () => {
         ))}
         {(!history || history.length === 0) && (
           <div className="h-full flex flex-col items-center justify-center space-y-2 opacity-50">
-            <span className="text-sm text-zinc-500 italic">No messages yet.</span>
-            <span className="text-xs text-zinc-600">The walls have no ears.</span>
+            <span className="text-sm text-zinc-500 italic">
+              No messages yet.
+            </span>
+            <span className="text-xs text-zinc-600">
+              The walls have no ears.
+            </span>
           </div>
         )}
       </div>
